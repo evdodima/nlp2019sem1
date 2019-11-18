@@ -1,11 +1,43 @@
+from pyspark.sql import SparkSession
+from pyspark.conf import SparkConf
+
 import os
+from glob import glob
 import pubmed_parser as pp
 from pyspark.sql import Row
 
-# path_to_data = pp.list_xml_path('parsed')
-# parsed_results = path_to_data.map(lambda x: Row(file_name=os.path.basename(x), **pp.parse_pubmed_xml(x)))
-parsed_results = pp.parse_medline_xml('./parsed/new_sample.xml')
-rows = list(map(lambda x: Row(**x), parsed_results))
-dataframe = rows.df()
-final_data = dataframe[['abstract']]
-final_data.write.parquet('abstracts.parquet')
+conf = SparkConf().\
+    setAppName('map').\
+    setMaster('local[5]').\
+    set('spark.yarn.appMasterEnv.PYSPARK_PYTHON', '~/anaconda3/bin/python').\
+    set('spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON', '~/anaconda3/bin/python').\
+    set('executor.memory', '8g').\
+    set('spark.executor.memoryOverhead', '16g').\
+    set('spark.sql.codegen', 'true').\
+    set('spark.yarn.executor.memory', '16g').\
+    set('yarn.scheduler.minimum-allocation-mb', '500m').\
+    set('spark.dynamicAllocation.maxExecutors', '3').\
+    set('spark.driver.maxResultSize', '0')
+
+spark = SparkSession.builder.\
+    appName("testing").\
+    config(conf=conf).\
+    getOrCreate()
+
+spark.sparkContext.addPyFile('pubmed_parser/dist/pubmed_parser-0.2.1-py3.7.egg') # building with Python 3.5
+
+medline_files_rdd = spark.sparkContext.parallelize(glob('data/*.gz'), numSlices=1)
+
+parse_results_rdd = medline_files_rdd.\
+    flatMap(lambda x: [Row(file_name=os.path.basename(x), **publication_dict) 
+                       for publication_dict in pp.parse_medline_xml(x)])
+
+medline_df = parse_results_rdd.toDF()
+abstracts = medline_df[['abstract']]
+
+print(abstracts.schema)
+# print(len(abstracts))
+
+
+# save to parquet
+# medline_df.write.parquet('raw_medline.parquet', mode='overwrite')
