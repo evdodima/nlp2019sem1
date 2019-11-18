@@ -34,10 +34,7 @@ def word_tokenize1(x):
     lowerW = x.lower()
     return nltk.word_tokenize(x)
 
-# read data ...
-# data =
-
-words = data.flatMap(word_tokenize1)
+words = df.flatMap(word_tokenize1)
 print words.collect()
 
 stop_words=set(stopwords.words('english'))
