@@ -26,18 +26,15 @@ spark = SparkSession.builder.\
 
 spark.sparkContext.addPyFile('pubmed_parser/dist/pubmed_parser-0.2.1-py3.7.egg') # building with Python 3.5
 
-medline_files_rdd = spark.sparkContext.parallelize(glob('data/*.gz'), numSlices=1)
+medline_files_rdd = spark.sparkContext.parallelize(glob('data/*.gz'), numSlices=1000)
 
 parse_results_rdd = medline_files_rdd.\
     flatMap(lambda x: [Row(file_name=os.path.basename(x), **publication_dict) 
                        for publication_dict in pp.parse_medline_xml(x)])
 
 medline_df = parse_results_rdd.toDF()
-abstracts = medline_df[['abstract']]
 
-print(abstracts.schema)
-# print(len(abstracts))
-
+df = medline_df[['abstract']].filter("abstract != \"\"")
 
 # save to parquet
-# medline_df.write.parquet('raw_medline.parquet', mode='overwrite')
+medline_df.write.parquet('raw_medline.parquet', mode='overwrite')
