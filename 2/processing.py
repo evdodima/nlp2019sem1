@@ -28,16 +28,16 @@ spark = SparkSession.builder.\
 
 spark.sparkContext.addPyFile('pubmed_parser/dist/pubmed_parser-0.2.1-py3.7.egg') # building with Python 3.5
 
-df = sqlContext.read.parquet('./raw_medline.parquet')
+df = spark.read.parquet('./raw_medline.parquet')
 
 def word_tokenize1(x):
-    lowerW = x.lower()
-    return nltk.word_tokenize(x)
+	a = x.abstract
+	return nltk.word_tokenize(a.lower())
 
-words = df.flatMap(word_tokenize1)
-print words.collect()
+words = df.rdd.flatMap(word_tokenize1)
 
 stop_words=set(stopwords.words('english'))
 stopW = words.filter(lambda word : word[0] not in stop_words and word[0] != '')
-#print stopW.collect()
+
+stopW.map(Row('abstract')).toDF().write.parquet('tokenized_abstracts.parquet', mode='overwrite')
 
