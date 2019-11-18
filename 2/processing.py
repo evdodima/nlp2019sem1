@@ -8,6 +8,8 @@ from glob import glob
 import pubmed_parser as pp
 from pyspark.sql import Row
 
+import dill
+
 conf = SparkConf().\
     setAppName('map').\
     setMaster('local[5]').\
@@ -34,10 +36,20 @@ def word_tokenize1(x):
 	a = x.abstract
 	return nltk.word_tokenize(a.lower())
 
-words = df.rdd.flatMap(word_tokenize1)
+words = df.rdd.map(word_tokenize1)
 
 stop_words=set(stopwords.words('english'))
-stopW = words.filter(lambda word : word[0] not in stop_words and word[0] != '')
 
-stopW.map(Row('abstract')).toDF().write.parquet('tokenized_abstracts.parquet', mode='overwrite')
+def remove_stopwords(x):
+	arr = list(filter(lambda w : w not in stop_words, x))
+	words = ' '.join(arr)
+	return words
 
+stopW = words.map(remove_stopwords)
+
+stopW.coalesce(1).saveAsTextFile('result.txt')
+
+
+# with open('somefile.txt', 'rw+') as the_file:
+
+#     the_file.write('Hello\n')

@@ -37,4 +37,4 @@ medline_df = parse_results_rdd.toDF()
 df = medline_df[['abstract']].filter("abstract != \"\"")
 
 # save to parquet
-medline_df.write.parquet('raw_medline.parquet', mode='overwrite')
+df.write.parquet('raw_medline.parquet', mode='overwrite')
