@@ -6,6 +6,9 @@ from glob import glob
 import pubmed_parser as pp
 from pyspark.sql import Row
 
+import nltk
+from nltk.corpus import stopwords
+
 conf = SparkConf().\
     setAppName('map').\
     setMaster('local[5]').\
@@ -24,30 +27,41 @@ spark = SparkSession.builder.\
     config(conf=conf).\
     getOrCreate()
 
-spark.sparkContext.addPyFile('pubmed_parser/dist/pubmed_parser-0.2.1-py3.7.egg') # building with Python 3.5
+# spark.sparkContext.addPyFile('pubmed_parser/dist/pubmed_parser-0.2.1-py3.7.egg') # building with Python 3.5
 
-# /Volumes/新加卷/nlp/input/*.gz
-# /Users/rinat/dev/nlp2019sem1/data/*.xml.gz
+paths = ["/Volumes/新加卷/nlp/input/*.gz", "./data/*.xml.gz"] # full data, test data
+data = spark.sparkContext.parallelize(glob(paths[1]), numSlices=500)
 
-medline_files_rdd = spark.sparkContext.parallelize(glob('/Volumes/新加卷/nlp/input/*.gz'), numSlices=1000)
+# task 1
 
-def process(x):
+def parse_abstracts(x):
     arr = []
     for publication_dict in pp.parse_medline_xml(x):
         if publication_dict['abstract'] != "":
             arr.append(Row(abstract=publication_dict['abstract']))
     return arr
 
-parse_results_rdd = medline_files_rdd.flatMap(process)
+abstracts = data.flatMap(parse_abstracts)
 
-# df = parse_results_rdd.toDF()
+# task 2
 
-# df = medline_df.filter("abstract != \"\"")
+def word_tokenize1(x):
+    a = x.abstract
+    return nltk.word_tokenize(a.lower())
 
-# print(df.take(10))
+words = abstracts.map(word_tokenize1)
 
-# save to parquet
-parse_results_rdd.toDF().write.parquet('/Volumes/新加卷/nlp/raw_medline.parquet', mode='overwrite')
+stop_words=set(stopwords.words('english'))
+
+def remove_stopwords(x):
+    arr = list(filter(lambda w : w not in stop_words, x))
+    words = ' '.join(arr)
+    return words
+
+result = words.map(remove_stopwords)
+
+output_paths = ["/Volumes/新加卷/nlp/abstracts_tokenized/result.txt", 'result.txt'] # full data, test data
+result.coalesce(1).saveAsTextFile(output_paths[1])
 
 
 
