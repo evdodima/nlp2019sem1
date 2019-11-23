@@ -26,15 +26,28 @@ spark = SparkSession.builder.\
 
 spark.sparkContext.addPyFile('pubmed_parser/dist/pubmed_parser-0.2.1-py3.7.egg') # building with Python 3.5
 
-medline_files_rdd = spark.sparkContext.parallelize(glob('data/*.gz'), numSlices=1000)
+# /Volumes/新加卷/nlp/input/*.gz
+# /Users/rinat/dev/nlp2019sem1/data/*.xml.gz
 
-parse_results_rdd = medline_files_rdd.\
-    flatMap(lambda x: [Row(file_name=os.path.basename(x), **publication_dict) 
-                       for publication_dict in pp.parse_medline_xml(x)])
+medline_files_rdd = spark.sparkContext.parallelize(glob('/Volumes/新加卷/nlp/input/*.gz'), numSlices=1000)
 
-medline_df = parse_results_rdd.toDF()
+def process(x):
+    arr = []
+    for publication_dict in pp.parse_medline_xml(x):
+        if publication_dict['abstract'] != "":
+            arr.append(Row(abstract=publication_dict['abstract']))
+    return arr
 
-df = medline_df[['abstract']].filter("abstract != \"\"")
+parse_results_rdd = medline_files_rdd.flatMap(process)
+
+# df = parse_results_rdd.toDF()
+
+# df = medline_df.filter("abstract != \"\"")
+
+# print(df.take(10))
 
 # save to parquet
-df.write.parquet('raw_medline.parquet', mode='overwrite')
+parse_results_rdd.toDF().write.parquet('/Volumes/新加卷/nlp/raw_medline.parquet', mode='overwrite')
+
+
+
