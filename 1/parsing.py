@@ -29,8 +29,6 @@ spark = SparkSession.builder.\
 
 # spark.sparkContext.addPyFile('pubmed_parser/dist/pubmed_parser-0.2.1-py3.7.egg') # building with Python 3.5
 
-paths = ["/Volumes/新加卷/nlp/input/*.gz", "./data/*.xml.gz"] # full data, test data
-data = spark.sparkContext.parallelize(glob(paths[1]), numSlices=500)
 
 # task 1
 
@@ -41,15 +39,11 @@ def parse_abstracts(x):
             arr.append(Row(abstract=publication_dict['abstract']))
     return arr
 
-abstracts = data.flatMap(parse_abstracts)
-
 # task 2
 
 def word_tokenize1(x):
     a = x.abstract
     return nltk.word_tokenize(a.lower())
-
-words = abstracts.map(word_tokenize1)
 
 stop_words=set(stopwords.words('english'))
 
@@ -58,10 +52,24 @@ def remove_stopwords(x):
     words = ' '.join(arr)
     return words
 
-result = words.map(remove_stopwords)
+paths = ["/Volumes/新加卷/nlp/input/", "./data/"] # full data, test data
+output_paths = ["/Volumes/新加卷/nlp/abstracts_tokenized/", '']
 
-output_paths = ["/Volumes/新加卷/nlp/abstracts_tokenized/result.txt", 'result.txt'] # full data, test data
-result.coalesce(1).saveAsTextFile(output_paths[1])
+p = paths[0]
+for filename in sorted(os.listdir(p)):
+    if filename.endswith(".gz"):
+        
+        data = spark.sparkContext.parallelize(glob(p+filename), numSlices=1000)
+
+        data = data.flatMap(parse_abstracts)
+        
+        data = data.map(word_tokenize1).map(remove_stopwords)
+
+        name = os.path.splitext(os.path.splitext(filename)[0])[0]
+
+        print(name)
+
+        data.coalesce(1).saveAsTextFile(output_paths[0]+name+".txt")
 
 
 
