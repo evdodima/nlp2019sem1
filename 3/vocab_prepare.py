@@ -1,17 +1,19 @@
 from gensim.models import FastText
 import nltk
 import re
+import string
 
+import pickle
 
 base = "/Volumes/新加卷/nlp/"
 
 words = {}
 
-def hasNumbers(inputString):
-    return bool(re.search(r'\d', inputString))
+def invalid_word(inputString):
+    return bool(re.search(r'\d', inputString)) or not re.search('[a-zA-Z]', inputString)
 
 def word_tokenize_dima(x):
-	return filter(lambda w: not (hasNumbers(w)), nltk.word_tokenize(x))
+	return filter(lambda w: not (invalid_word(w)), nltk.word_tokenize(x))
 
 
 path = base + "abstracts_tokenized/pubmed19n0001.txt/part-00000"
@@ -38,15 +40,11 @@ with open(path) as infile:
 
 print(len(words))
 
-sorted_x = sorted(words.items(), key= lambda kv: kv[1], reverse = True)
+sorted_x = sorted(words.items(), key= lambda kv: kv[1], reverse = True)[:1000]
 
-print(sorted_x[10])
 
-top_100 = map(lambda x: x[0], sorted_x[:1000]) #list(filter(lambda k, v: v > sorted_x[10], words))
+with open(base + "vocab/top100.pickle", 'wb') as out:
+	pickle.dump(sorted_x, out, protocol = pickle.HIGHEST_PROTOCOL)
 
-print(top_100)
-
-with open(base + "vocab/top100.txt", 'w+') as out:
-	out.write(" ".join(top_100))
 
 
