@@ -25,13 +25,26 @@ with open(input_path, 'r') as input_file:
 print(input_data)
 
 fname = ""
-model = model = FastText.load(fname)
+model = FastText.load(fname)
 
 
 avg_vector = np.array([])
+words_number = 0
+
+vectors = []
 for context_tuple in input_data:
-	np.array(model.wv[context_tuple[1]])
-	avg_vector
+	for word in context_tuple[1]:
+		if word in model.wv.vocab:
+			avg_vector += np.array(model.wv[word])
+			words_number += 1
+	avg_vector = avg_vector / words_number
+	vectors.append((context_tuple[0],avg_vector))
+
+print(vectors[:10])
+
+
+
+
 
 
 # logging.basicConfig()
