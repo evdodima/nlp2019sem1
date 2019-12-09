@@ -2,8 +2,8 @@
 import nltk
 import re
 import string
-
-import pickle
+from argparse import ArgumentParser
+import pickle, os
 
 
 parser = ArgumentParser()
@@ -12,8 +12,8 @@ parser.add_argument("-in_dir", dest="in_dir")
 
 args = parser.parse_args()
 
-input_path = parser.in_dir
-output_path = parser.out_dir
+input_path = args.in_dir
+output_path = args.out_dir
 
 words = {}
 
@@ -23,33 +23,20 @@ def invalid_word(inputString):
 def word_tokenize(x):
 	return filter(lambda w: not (invalid_word(w)), nltk.word_tokenize(x))
 
-
-# path = base + "abstracts_tokenized/all.txt"
-lines = sum(1 for line in open(path))
-
 for path in sorted(os.listdir(input_path)):
-	if path.endswith(".txt"):
-		with open(path) as infile:
-			print("opened " + path)
-			i = 0
+	if path.endswith(".txt") and path != 'all.txt':
+		print(path)
+		with open(input_path + "/" + path + "/part-00000") as infile:
 			for line in infile:
-
-				if i % 10000 == 0:
-					# print(i/float(lines))
 				token_words = word_tokenize(line)
 				for word in token_words:
 					if word not in words:
 						words[word] = 0 
-
 					words[word] += 1
-
-				i += 1
-
-print(len(words))
 
 sorted_x = sorted(words.items(), key= lambda kv: kv[1], reverse = True)[:100000]
 
-with open(output_path, 'wb') as out:
+with open(output_path + "/result.pickle", 'wb') as out:
 	pickle.dump(sorted_x, out, protocol = pickle.HIGHEST_PROTOCOL)
 
 

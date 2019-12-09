@@ -16,11 +16,6 @@ args = parser.parse_args()
 logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
 
-
-modelTypes = ['skipgram']
-dims = [300]
-windows = [10]
-
 vocab = {}
 
 in_dir = args.in_dir
@@ -32,11 +27,11 @@ with open(dict_path,"rb") as lines:
 
 
 for path in sorted(os.listdir(in_dir)):
-	if path.endswith(".txt"):
+	if path.endswith(".txt") and path != 'all.txt':
 		full_path = in_dir + "/" + path + "/part-00000"
 		with open(full_path, "r") as input_file:
-			tatal_ex = 0
-			tatal_words = 0
+			total_ex = 0
+			total_words = 0
 			for sentence in input_file:
 				for word in sentence.split(" "):
 					total_words += 1
@@ -55,8 +50,8 @@ for path in sorted(os.listdir(in_dir)):
 				model.build_vocab_from_freq(vocab)
 				print("finished vocab")
 
-						model.train(corpus_file = full_path_dima, total_examples=tatal_ex, total_words=tatal_words, epochs=model.epochs)  # train
+			model.train(corpus_file = full_path, total_examples=total_ex, total_words=total_words, epochs=model.epochs)  # train
 
-						model.save(get_tmpfile(model_path))
+			model.save(get_tmpfile(model_path))
 
 

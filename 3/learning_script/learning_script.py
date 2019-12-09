@@ -35,7 +35,7 @@ with open(dict_path,"rb") as lines:
 
 for path_dima in sorted(os.listdir(in_dir)):
 	if path_dima.endswith(".txt") and path_dima != 'all.txt':
-		full_path_dima = in_dir + "/" + path_dima + "/part-00000"
+		full_path_dima = in_dir + "/" + path_dima
 		with open(full_path_dima, "r") as file_dima:
 			tatal_ex = 0
 			tatal_words = 0
