@@ -1,16 +1,19 @@
 from sklearn import svm
 import numpy as np
+import pandas as pd
+
 from sklearn.metrics import classification_report
 
-vectors_train = np.load('/Volumes/新加卷/nlp/vectors/out_train.npy', allow_pickle=True)
-print(len(vectors_train[0][0]))
+vectors_train = pd.read_pickle('/Volumes/新加卷/nlp/vectors/out_train.pkl')
+
+print(vectors_train)
 
 clf = svm.SVC()
-clf.fit(vectors_train[0], vectors_train[1])
+clf.fit(list(vectors_train['vector']), list(vectors_train['label']))
 
 
-vectors_test = np.load('/Volumes/新加卷/nlp/vectors/out_test.npy', allow_pickle=True)
+vectors_test = pd.read_pickle('/Volumes/新加卷/nlp/vectors/out_test.pkl')
 
-predictions = clf.predict(vectors_test[0])
+predictions = clf.predict(list(vectors_test['vector']))
 
-print(classification_report(vectors_test[1], predictions))
+print(classification_report(list(vectors_test['label']), predictions))

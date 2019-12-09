@@ -13,7 +13,7 @@ import pandas as pd
 
 
 
-input_path = "/Users/rinat/Downloads/xu/aimed_relations_test.txt"
+input_path = "/Users/rinat/Downloads/xu/aimed_relations_train.txt"
 
 input_data = []
 
@@ -56,7 +56,7 @@ result["vector"] = vectors
 
 print(result)
 
-output = "/Volumes/新加卷/nlp/vectors/out_test.pkl"
+output = "/Volumes/新加卷/nlp/vectors/out_train.pkl"
 result.to_pickle(output)
 
 
