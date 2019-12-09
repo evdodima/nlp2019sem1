@@ -8,6 +8,7 @@ import os
 
 import json
 import numpy as np
+import pandas as pd
 
 
 
@@ -32,6 +33,8 @@ avg_vector = np.array([])
 words_number = 0
 
 vectors = []
+labels = np.array([])
+
 for context_tuple in input_data:
 	for word in context_tuple[1]:
 		if word in model.wv.vocab:
@@ -41,11 +44,20 @@ for context_tuple in input_data:
 				avg_vector += np.array(model.wv[word])
 			words_number += 1
 	avg_vector = avg_vector / words_number
-	vectors.append((context_tuple[0],avg_vector))
+	vectors += [avg_vector]
+	labels = np.append(labels, context_tuple[0])
+	
 
 print(vectors[:10])
 
+result = pd.DataFrame()
+result["label"] = labels
+result["vector"] = vectors
 
+print(result)
+
+output = "/Volumes/新加卷/nlp/vectors/out_test.pkl"
+result.to_pickle(output)
 
 
 
