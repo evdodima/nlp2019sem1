@@ -1,5 +1,7 @@
 from gensim.models import FastText
 from gensim.test.utils import get_tmpfile
+from gensim.models import KeyedVectors
+
 
 import pickle
 import logging
@@ -13,20 +15,21 @@ import pandas as pd
 
 
 
-input_path = "/Users/rinat/Downloads/xu/aimed_relations_train.txt"
+input_path = "/Users/evdodima/education/input_for_5/"
 
 input_data = []
 
-
-with open(input_path, 'r') as input_file:
-	for json_line in input_file:
-		element = json.loads(json_line)
-		input_data.append((element["label"],element["middle_context"]))
+for train_filename in sorted(os.listdir(input_path)):
+	if train_filename.endswith(".txt"):
+		with open(input_path + train_filename, 'r') as train_file:
+			for json_line in train_file:
+				element = json.loads(json_line)
+				input_data.append((element["label"],element["middle_context"]))
 
 print(input_data[:10])
 
-fname = "/Volumes/新加卷/nlp/models/('cbow', 300, 5).model"
-model = FastText.load(fname)
+vec_path = "/Users/evdodima/education/fasttext_pmc.vec"
+wv = KeyedVectors.load_word2vec_format(vec_path, binary=False)
 
 
 avg_vector = np.array([])
@@ -37,17 +40,21 @@ labels = np.array([])
 
 for context_tuple in input_data:
 	for word in context_tuple[1]:
-		if word in model.wv.vocab:
+		try:
+			v = np.array(wv.get_vector(word))
 			if len(avg_vector) == 0:
-				avg_vector = np.array(model.wv[word])
+				avg_vector = v
 			else:
-				avg_vector += np.array(model.wv[word])
+				avg_vector += v
 			words_number += 1
+		except KeyError:
+			print(word +" no such word")
+
+			
 	avg_vector = avg_vector / words_number
 	vectors += [avg_vector]
 	labels = np.append(labels, context_tuple[0])
 	
-
 print(vectors[:10])
 
 result = pd.DataFrame()
@@ -56,7 +63,7 @@ result["vector"] = vectors
 
 print(result)
 
-output = "/Volumes/新加卷/nlp/vectors/out_train.pkl"
+output = "/Users/evdodima/education/train.pkl"
 result.to_pickle(output)
 
 
