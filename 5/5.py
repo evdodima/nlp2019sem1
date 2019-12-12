@@ -38,7 +38,12 @@ words_number = 0
 vectors = []
 labels = np.array([])
 
+all_data = len(input_data)
+i = 0
 for context_tuple in input_data:
+	progress = int((float(i) / all_data) * 1000)
+	if progress % 10 == 0:
+		print(progress)
 	for word in context_tuple[1]:
 		try:
 			v = np.array(wv.get_vector(word))
@@ -48,9 +53,10 @@ for context_tuple in input_data:
 				avg_vector += v
 			words_number += 1
 		except KeyError:
-			print(word +" no such word")
+			continue
+			# print(word +" no such word")
+	i += 1
 
-			
 	avg_vector = avg_vector / words_number
 	vectors += [avg_vector]
 	labels = np.append(labels, context_tuple[0])
