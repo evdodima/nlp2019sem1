@@ -17,60 +17,60 @@ import pandas as pd
 
 input_path = "/Users/evdodima/education/input_for_5/"
 
-input_data = []
+vec_path = "/Users/evdodima/education/fasttext_pmc.vec"
+wv = KeyedVectors.load_word2vec_format(vec_path, binary=False)
 
 for train_filename in sorted(os.listdir(input_path)):
+	input_data = []
+	print(train_filename)
 	if train_filename.endswith(".txt"):
 		with open(input_path + train_filename, 'r') as train_file:
 			for json_line in train_file:
 				element = json.loads(json_line)
 				input_data.append((element["label"],element["middle_context"]))
 
-print(input_data[:10])
-
-vec_path = "/Users/evdodima/education/fasttext_pmc.vec"
-wv = KeyedVectors.load_word2vec_format(vec_path, binary=False)
+		print(input_data[:10])
 
 
-avg_vector = np.array([])
-words_number = 0
+		avg_vector = np.array([])
+		words_number = 0
 
-vectors = []
-labels = np.array([])
+		vectors = []
+		labels = np.array([])
 
-all_data = len(input_data)
-i = 0
-for context_tuple in input_data:
-	progress = int((float(i) / all_data) * 1000)
-	if progress % 10 == 0:
-		print(progress)
-	for word in context_tuple[1]:
-		try:
-			v = np.array(wv.get_vector(word))
-			if len(avg_vector) == 0:
-				avg_vector = v
-			else:
-				avg_vector += v
-			words_number += 1
-		except KeyError:
-			continue
-			# print(word +" no such word")
-	i += 1
+		all_data = len(input_data)
+		i = 0
+		for context_tuple in input_data:
+			progress = int((float(i) / all_data) * 1000)
+			if progress % 10 == 0:
+				print(progress)
+			for word in context_tuple[1]:
+				try:
+					v = np.array(wv.get_vector(word))
+					if len(avg_vector) == 0:
+						avg_vector = v
+					else:
+						avg_vector += v
+					words_number += 1
+				except KeyError:
+					continue
+					# print(word +" no such word")
+			i += 1
 
-	avg_vector = avg_vector / words_number
-	vectors += [avg_vector]
-	labels = np.append(labels, context_tuple[0])
-	
-print(vectors[:10])
+			avg_vector = avg_vector / words_number
+			vectors += [avg_vector]
+			labels = np.append(labels, context_tuple[0])
+			
+		print(vectors[:10])
 
-result = pd.DataFrame()
-result["label"] = labels
-result["vector"] = vectors
+		result = pd.DataFrame()
+		result["label"] = labels
+		result["vector"] = vectors
 
-print(result)
+		print(result)
 
-output = "/Users/evdodima/education/train.pkl"
-result.to_pickle(output)
+		output = "/Users/evdodima/education/pkls/" + train_filename[:-4] + ".pkl"
+		result.to_pickle(output)
 
 
 
