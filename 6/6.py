@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 import os
 
+from sklearn.utils import resample
+
+
 from sklearn.metrics import classification_report
 
 input_path = "/Users/evdodima/education/pkls/"
@@ -12,11 +15,18 @@ for filename in sorted(os.listdir(input_path)):
 		corpusname = filename.split("_")[0]
 		vectors_train = pd.read_pickle(input_path + filename)
 		# print(vectors_train)
+		df_majority = vectors_train[vectors_train.label==0]
+		df_minority = vectors_train[vectors_train.label==1]
 
-		clf = svm.SVC(kernel='linear', 
-            class_weight='balanced', # penalize
-            probability=True)
-		clf.fit(list(vectors_train['vector']), list(vectors_train['label']))
+		df_majority_down = resample(df_majority, 
+                                 replace=True,     # sample with replacement
+                                 n_samples=len(df_minority),    # to match majority class
+                                 random_state=123) # reproducible results
+
+		df_down = pd.concat([df_majority_down, df_minority])
+
+		clf = svm.SVC()
+		clf.fit(list(df_down['vector']), list(df_down['label']))
 
 
 		vectors_test = pd.read_pickle(input_path + corpusname + "_test.pkl")
