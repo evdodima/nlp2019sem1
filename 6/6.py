@@ -4,6 +4,8 @@ import pandas as pd
 import os
 
 from sklearn.utils import resample
+from sklearn.ensemble import RandomForestClassifier
+
 
 
 from sklearn.metrics import classification_report
@@ -18,15 +20,15 @@ for filename in sorted(os.listdir(input_path)):
 		df_majority = vectors_train[vectors_train.label==0]
 		df_minority = vectors_train[vectors_train.label==1]
 
-		df_majority_down = resample(df_majority, 
+		df_minority_upsampled = resample(df_minority, 
                                  replace=True,     # sample with replacement
-                                 n_samples=len(df_minority),    # to match majority class
+                                 n_samples=len(df_majority),    # to match majority class
                                  random_state=123) # reproducible results
 
-		df_down = pd.concat([df_majority_down, df_minority])
+		df_upsampled = pd.concat([df_majority, df_minority_upsampled])
 
-		clf = svm.SVC()
-		clf.fit(list(df_down['vector']), list(df_down['label']))
+		clf = RandomForestClassifier()
+		clf.fit(list(df_upsampled['vector']), list(df_upsampled['label']))
 
 
 		vectors_test = pd.read_pickle(input_path + corpusname + "_test.pkl")
