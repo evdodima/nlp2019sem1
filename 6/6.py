@@ -5,10 +5,16 @@ import os
 
 from sklearn.utils import resample
 from sklearn.ensemble import RandomForestClassifier
-
+from sklearn.naive_bayes import GaussianNB
 
 
 from sklearn.metrics import classification_report
+
+from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import plot_precision_recall_curve
+import matplotlib.pyplot as plt
+import pickle
+
 
 input_path = "/Users/evdodima/education/pkls/"
 
@@ -27,14 +33,25 @@ for filename in sorted(os.listdir(input_path)):
 
 		df_upsampled = pd.concat([df_majority, df_minority_upsampled])
 
-		clf = RandomForestClassifier()
-		clf.fit(list(df_upsampled['vector']), list(df_upsampled['label']))
+		df = pd.DataFrame(df_upsampled.vector.tolist(), columns=list(range(0, 100)))
+
+		x_train, y_train = df, df_upsampled["label"]
+		clf = svm.SVC()
+		clf.fit(x_train, y_train)
 
 
 		vectors_test = pd.read_pickle(input_path + corpusname + "_test.pkl")
 
-		y_pred = clf.predict(list(vectors_test['vector']))
-		y_test = list(vectors_test['label'])
+		x_test = pd.DataFrame(vectors_test.vector.tolist(), columns=list(range(0, 100)))
+		y_pred = clf.predict(x_test)
+		y_test = vectors_test['label']
 
-		print(corpusname)
+		print(filename)
 		print(classification_report(y_true=y_test,y_pred=y_pred))
+		print("matthews_corrcoef: " + str(matthews_corrcoef(y_test,y_pred)))
+		disp = plot_precision_recall_curve(clf, x_test, y_test, name=filename)
+		# disp.plot(name=corpusname)
+		# skplt.metrics.plot_precision_recall_curve(y_test, y_pred)
+		filename = corpusname + "_model.pkl"
+		pickle.dump(clf, open(filename, 'wb'))
+plt.show()
