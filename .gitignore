@@ -1,3 +1,6 @@
 nlp
 data/
 models/
+env/
+clf_models/
+raw_medline.parquet
