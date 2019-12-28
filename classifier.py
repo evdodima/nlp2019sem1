@@ -23,19 +23,19 @@ for filename in sorted(os.listdir(input_path)):
 		corpusname = filename.split("_")[0]
 		vectors_train = pd.read_pickle(input_path + filename)
 		# print(vectors_train)
-		# df_majority = vectors_train[vectors_train.label==0]
-		# df_minority = vectors_train[vectors_train.label==1]
+		df_majority = vectors_train[vectors_train.label==0]
+		df_minority = vectors_train[vectors_train.label==1]
 
-		# df_minority_upsampled = resample(df_minority, 
-  #                                replace=True,     # sample with replacement
-  #                                n_samples=len(df_majority),    # to match majority class
-  #                                random_state=123) # reproducible results
+		df_minority_upsampled = resample(df_minority, 
+                                 replace=True,     # sample with replacement
+                                 n_samples=len(df_majority),    # to match majority class
+                                 random_state=123) # reproducible results
 
-		# df_upsampled = pd.concat([df_majority, df_minority_upsampled])
+		df_upsampled = pd.concat([df_majority, df_minority_upsampled])
 
-		df = pd.DataFrame(vectors_train.vector.tolist(), columns=list(range(0, 100)))
+		df = pd.DataFrame(df_upsampled.vector.tolist(), columns=list(range(0, 100)))
 
-		x_train, y_train = df, vectors_train["label"]
+		x_train, y_train = df, df_upsampled["label"]
 		clf = svm.SVC()
 		clf.fit(x_train, y_train)
 
